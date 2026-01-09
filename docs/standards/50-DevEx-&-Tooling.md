@@ -4,7 +4,7 @@
 - Language: **Ruby 3.3+**
 - Framework: **Rails 8**
 - Package manager: Bundler
-- Formatter/Linter: **RuboCop**
+- Formatter/Linter: **Standard (standardrb)**
 - Database: PostgreSQL
 - JavaScript: Import Maps (no Node.js needed)
 - CSS: TailwindCSS v4
@@ -12,8 +12,8 @@
 
 ## Commands
 - `make setup` — install deps & setup database (`bin/setup`)
-- `make lint` — RuboCop linting (`bin/rubocop`)
-- `make lint:fix` — auto-fix lint issues (`bin/rubocop -a`)
+- `make lint` — Standard linting (`bundle exec standardrb`)
+- `make lint:fix` — auto-fix lint issues (`bundle exec standardrb --fix`)
 - `make check` — lint only (no type checking in Ruby)
 - `make test` — runs unit, integration, system tests
 - `make test:unit` — models, helpers, mailers
