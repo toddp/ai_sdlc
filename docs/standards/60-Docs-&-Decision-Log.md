@@ -7,6 +7,22 @@
 - Store SPECs in `docs/specs/[N].[feature]_spec.md`.
 - Link ADRs and SPECs in PRs and commit messages.
 
+## SPEC Workflow
+
+**IMPORTANT: Every feature MUST have a SPEC document before implementation begins.**
+
+1. **Before coding any feature:**
+   - Write a SPEC document in `docs/specs/`
+   - Get user approval on the SPEC
+   - Only then create the implementation plan and start coding
+
+2. **SPEC review checklist:**
+   - [ ] Problem statement is clear
+   - [ ] Success criteria are measurable
+   - [ ] No implementation code in the spec (describe behavior, not code)
+   - [ ] Edge cases identified
+   - [ ] User has approved the spec
+
 ## SPEC Documents
 
 SPECs define **what** to build and **why**, not **how** to implement it.
