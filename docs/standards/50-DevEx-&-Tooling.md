@@ -35,23 +35,42 @@
 
 ## Git Workflow
 
-### Feature Development
-1. **Create feature branch** before starting work:
+**IMPORTANT: Always use feature branches. Never commit directly to `main`.**
+
+### Before Starting Any Work
+1. **Check current branch**: `git branch --show-current`
+2. **If on `main`**, create a feature branch first:
    ```bash
+   git checkout main
+   git pull origin main
    git checkout -b feature/<short-descriptive-name>
    ```
+3. **Never make changes directly on `main`** — feature branches protect against incomplete or broken changes
+
+### Feature Development
+1. **Create feature branch** before starting work
 2. **All development** for the feature happens on this branch
-3. **After review and approval**, commit and push:
+3. **Commit incrementally** as you complete logical units of work
+4. **Run tests** before considering work complete:
    ```bash
-   git add <new-and-changed-files>
-   git commit -m "Short meaningful message describing the change"
+   bin/rails test  # or: make test
+   ```
+5. **After tests pass**, push and create PR:
+   ```bash
    git push -u origin feature/<branch-name>
+   gh pr create --title "Feature: description" --body "## Summary\n..."
    ```
 
 ### Branch Naming
 - Features: `feature/<name>` (e.g., `feature/action-generation`)
 - Bugfixes: `fix/<name>` (e.g., `fix/oauth-token-refresh`)
 - Docs: `docs/<name>` (e.g., `docs/runbook-updates`)
+
+### Quality Gates Before Merging
+- [ ] All tests pass
+- [ ] No linting errors
+- [ ] Code reviewed (for significant changes)
+- [ ] PR description includes summary and test plan
 
 ### Commit Messages
 - Use present tense, imperative mood ("Add feature" not "Added feature")
