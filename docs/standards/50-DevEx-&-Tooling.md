@@ -33,6 +33,31 @@
 - See [project/docs/GUARD-USAGE.md](../../project/docs/GUARD-USAGE.md) for detailed workflow
 - Only runs fast tests (unit/integration); use quality gate for full validation
 
+## Git Workflow
+
+### Feature Development
+1. **Create feature branch** before starting work:
+   ```bash
+   git checkout -b feature/<short-descriptive-name>
+   ```
+2. **All development** for the feature happens on this branch
+3. **After review and approval**, commit and push:
+   ```bash
+   git add <new-and-changed-files>
+   git commit -m "Short meaningful message describing the change"
+   git push -u origin feature/<branch-name>
+   ```
+
+### Branch Naming
+- Features: `feature/<name>` (e.g., `feature/action-generation`)
+- Bugfixes: `fix/<name>` (e.g., `fix/oauth-token-refresh`)
+- Docs: `docs/<name>` (e.g., `docs/runbook-updates`)
+
+### Commit Messages
+- Use present tense, imperative mood ("Add feature" not "Added feature")
+- Keep first line under 72 characters
+- Focus on *what* and *why*, not *how*
+
 ## CI
 - `ci-claude.yml` runs the quality gate via GitHub Actions.
 - Uses `ruby/setup-ruby` action with bundler caching.
