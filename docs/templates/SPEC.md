@@ -48,12 +48,16 @@ Describe the current state and pain points:
 **How much time do we have?**
 - <X-Y hours> implementation + tests + verification
 
-### Assumptions
-**What are we assuming to be true?**
+### Assumption Audit
+**What are we assuming to be true, and what breaks if we're wrong?**
 
-1. **Assumption 1:** <What we're assuming and why it's important>
-2. **Assumption 2:** <Another assumption>
-3. **Assumption 3:** <And another>
+List every assumption the design depends on. For each, state what happens if it's false and how we guard against that. An assumption with no guard is a latent bug.
+
+| Assumption | Risk if False | Guard / Mitigation |
+|---|---|---|
+| <e.g. User always has a time_zone set> | <service computed in UTC instead of local time> | <Fallback chain: user.time_zone → Time.zone → UTC> |
+| <Another assumption> | <What breaks> | <How we protect against it> |
+| <e.g. UI-enforced constraint is the only path in> | <User bypasses via DevTools or API call> | <Model validation / service guard rejects invalid input> |
 
 ### Non-goals (Future Enhancements)
 **What are we explicitly NOT doing in this iteration?**
@@ -189,6 +193,22 @@ export default class extends Controller {
 
 ---
 
+## Invariants
+
+**What must always be true after this feature ships — regardless of how a user got there?**
+
+List system-wide properties that must hold in all states. These become model validations, service guard clauses, and invariant tests. **If an invariant has no enforcement column filled in, that is a gap that must be addressed before implementation is approved.**
+
+| Invariant | Enforced By |
+|---|---|
+| <e.g. Submitted orders always have scheduled_date ≥ Time.current + min_lead_time> | <Model validation> |
+| <e.g. Available slots never include blocked/holiday dates> | <Service guard clauses> |
+| <Another invariant> | <Model validation / DB constraint / service guard / policy> |
+
+**Prompt:** For each invariant, ask: "How could a user end up in a state where this is violated?" If the answer is "bypass the UI", the model needs a validation. If the answer is "concurrent requests", you need a DB constraint or lock.
+
+---
+
 ## Acceptance Criteria
 
 **What must be true for this feature to be considered complete?**
@@ -294,9 +314,44 @@ Rails.logger.error(
 
 | Scenario | Risk Level | Mitigation |
 |----------|------------|------------|
+| User bypasses UI constraint via DevTools | Medium | Model validation rejects invalid value |
 | <Attack type> | High/Medium/Low | <How we prevent/detect/respond> |
 | <Another attack> | High/Medium/Low | <Mitigation strategy> |
 | <Third attack> | High/Medium/Low | <Defense approach> |
+
+### Business Rule Enforcement Layer
+
+List every constraint this feature introduces and explicitly identify where it is enforced. If a row has no server-side enforcement, that is a gap that must be addressed before implementation.
+
+| Rule / Constraint | UI Enforcement | Model Validates? | Service Guards? | Bypass Test Written? |
+|---|---|---|---|---|
+| <e.g. Scheduled date ≥ min_order_date> | Datepicker minDate | ✅ `validate :scheduled_date_within_lead_time` | ✅ `return [] if date < min_order_date` | ✅ |
+| <another rule> | <mechanism> | ✅/❌ | ✅/❌ | ✅/❌ |
+
+**Spec review gate:** Every row must have at least one ✅ in the Model or Service column before implementation is approved.
+
+---
+
+## Pre-Mortem
+
+**Complete before implementation.** Imagine it's 6 months from now and this feature is causing problems in production. Work backwards from failure — this bypasses optimism bias and surfaces failure modes that forward-looking design misses.
+
+1. **Support ticket flood:** What's the most common complaint users are filing about this feature?
+   > _Fill in:_
+
+2. **Power user exploit:** A determined user has found a way to do something they shouldn't be able to. What did they do? (Think: DevTools, direct API call, impersonation, manipulated URL)
+   > _Fill in:_
+
+3. **Edge case silent failure:** A valid but unusual input — null, empty, wrong type, extreme value, unicode, timezone edge — is silently producing wrong results with no error. What is it?
+   > _Fill in:_
+
+4. **Concurrency/race condition:** The feature works fine with one user but produces incorrect results when two requests run simultaneously. What's the race?
+   > _Fill in:_
+
+5. **Configuration drift:** A user has changed a setting (a config column, a boolean toggle, a numeric threshold) that causes this feature to behave in an unintended or dangerous way. What changed?
+   > _Fill in:_
+
+For each answer: does the current design handle it? If not, add a guard, validation, or test.
 
 ---
 
@@ -343,6 +398,11 @@ Rails.logger.error(
    - <User action> → <Expected result>
    - <Another user flow>
    - Verify accessibility
+
+5. **Server-Side Enforcement / Bypass Tests** (REQUIRED for any feature with UI constraints)
+   - For each row in the Business Rule Enforcement Layer table above, write a test that calls the model or service **directly** with an invalid value and asserts rejection
+   - Do not rely on controller/integration tests here — the point is to verify the model/service layer rejects bad input independently of the UI
+   - Examples: `test "model rejects X when Y"`, `test "service returns [] when date violates Z"`
 
 ### Edge Cases
 

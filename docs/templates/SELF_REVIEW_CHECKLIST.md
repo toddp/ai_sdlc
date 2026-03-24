@@ -10,7 +10,7 @@ Complete this checklist before requesting PR review or declaring a feature "done
 - [ ] **Comments:** Code has YARD documentation for public methods
 - [ ] **Complexity:** No overly complex methods (< 20 lines preferred)
 - [ ] **Error Handling:** Appropriate rescue blocks with logging
-- [ ] **Rails Conventions:** Follows Rails idioms and Jumpstart Pro patterns
+- [ ] **Rails Conventions:** Follows Rails idioms and project patterns
 
 ## Performance
 
@@ -29,6 +29,7 @@ Complete this checklist before requesting PR review or declaring a feature "done
 - [ ] **Secrets:** No credentials/API keys in code (use Rails credentials)
 - [ ] **Input Validation:** User input validated before processing
 - [ ] **Mass Assignment:** Strong parameters used in controllers
+- [ ] **Server-Side Enforcement:** Every constraint shown in the UI (datepicker limits, disabled fields, JS validation) is *also* rejected by the model or service — not just the browser
 
 ## Testing
 
@@ -38,6 +39,7 @@ Complete this checklist before requesting PR review or declaring a feature "done
 - [ ] **Edge Cases:** Boundary conditions tested
 - [ ] **Integration:** Critical flows have integration tests
 - [ ] **Test Quality:** Tests are readable, maintainable, independent
+- [ ] **Bypass Tests:** For each UI-enforced constraint, there is a model/service-level test that rejects the invalid value *without* going through the controller (see [Server-Side Enforcement Rule](/docs/standards/30-Testing-Standards.md))
 
 ## Documentation
 
@@ -57,7 +59,7 @@ Complete this checklist before requesting PR review or declaring a feature "done
 
 ## Quality Gates
 
-- [ ] **Linting:** RuboCop passes with 0 violations
+- [ ] **Linting:** Linter passes with 0 violations
 - [ ] **Tests:** All tests passing (unit + integration + system)
 - [ ] **Security Scan:** Brakeman passes (or issues documented)
 - [ ] **Quality Gate:** `scripts/quality_gate.sh` returns 0

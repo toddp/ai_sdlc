@@ -2,7 +2,7 @@
 
 **Role:** Senior engineer + architect collaborating in this repo.
 
-**NOTE** Root directory "/" is always relative to the project root. 
+**NOTE** Root directory "/" is always relative to the project root.
 **Always read:** `/docs/standards/*.md` and `/project/PROJECT_BRIEF.md` before proposing designs or code.
 
 ## Operating Rules
@@ -13,7 +13,7 @@
    - For features: SPEC (`/docs/templates/SPEC.md`) → ADR → **[AWAIT APPROVAL]** → Implementation plan → Tasks → Code.
    - **CRITICAL:** User must explicitly approve SPEC/ADR before implementation begins.
    - Exception: Only proceed automatically if user says **"Autonomy Mode: ON"**.
-   - For code: CHANGE PLAN (files, types, funcs) → code → tests → browser verify (if UI) → walkthrough → docs updates.
+   - For code: CHANGE PLAN (files, types, funcs) → code → tests → browser verify (if UI) → quality gate → code review → walkthrough → docs updates.
    - For new projects:
      1. Generate or update `/docs/plans/[N].[feature]_plan.md` based on `PROJECT_BRIEF.md`.
      2. Await approval before drafting SPECs or ADRs.
@@ -46,13 +46,19 @@ When I say **"Autonomy Mode: ON"** for a task:
    b) Apply changes (code + tests + docs).
    c) **Quick validation:** Run `make quick-check` (lint + tests for changed files only - fast).
    d) If passing, run **full validation:** `bash scripts/quality_gate.sh` (includes system tests).
-   e) **Browser verification:** For UI features, use Playwright to verify critical user flows:
+   e) **Interactive Browser Verification:** For UI features, use the browser tool (or Playwright) to verify critical user flows:
       - Start server if needed (`bin/dev`)
-      - Create/run Playwright test for the feature
+      - Run interactive browser session to simulate user actions
       - Capture screenshots for visual confirmation
       - Verify actual behavior matches acceptance criteria
-   f) If any validation fails: analyze failures, propose fixes, and repeat from step (b).
-   g) Stop when all gates pass, browser tests confirm UX, and **Acceptance Criteria** in `PROJECT_BRIEF.md` are met.
+   f) **Red-Team Review** (after tests pass, before declaring done):
+      - Role-play as each user type defined in the project: "What's the worst thing I can do with this feature?"
+      - Walk through each UI constraint: "Can I bypass this with DevTools or a direct HTTP call?"
+      - Walk through each invariant from the spec: "How could this invariant be violated in production?"
+      - Walk through each Assumption Audit row: "Did we actually guard against this being false?"
+      - If any gap is found: add model validation / service guard / test and repeat from step (b)
+   g) If any validation fails: analyze failures, propose fixes, and repeat from step (b).
+   h) Stop when all gates pass (specifically `scripts/quality_gate.sh`), browser tests confirm UX, Red-Team Review finds no gaps, and **Acceptance Criteria** in `PROJECT_BRIEF.md` are met.
 
 **Note:** Quality gate includes system tests by default. Skip with `SKIP_SYSTEM_TESTS=true` during iteration if needed, but always run full suite before declaring feature complete.
 
@@ -97,8 +103,11 @@ When I say **"Autonomy Mode: ON"** for a task:
 > 6) **CHANGE PLAN** (files to add/edit).
 > 7) **CODE + TESTS**, ending with **RUN INSTRUCTIONS** and README/RUNBOOK updates.
 > 8) **SELF-REVIEW** (use `/docs/templates/SELF_REVIEW_CHECKLIST.md`) before declaring feature complete.
-> 9) **BROWSER VERIFICATION** (if UI) using Playwright *after* automated tests pass.
-> 10) **WALKTHROUGH** in `docs/walkthroughs/` summarizing changes and verification.
+> 9) **INTERACTIVE BROWSER VERIFICATION** (if UI) using browser tool *after* automated tests pass.
+> 10) **RED-TEAM REVIEW**: Role-play as each user type and attempt to break the feature; walk through every invariant and assumption audit row from the spec; confirm all UI-enforced constraints are also rejected server-side; document any gaps found and fixes applied.
+> 11) **WALKTHROUGH** in `docs/walkthroughs/` summarizing changes and verification.
+> 12) **CODE REVIEW** Ensure all code has been reviewed.
+> 13) **QUALITY GATE** Ensure `scripts/quality_gate.sh` passes.
 >
 > **Autonomy Mode: ON** when I say so. Iterate until `scripts/quality_gate.sh` passes and all Acceptance Criteria are met.
 
