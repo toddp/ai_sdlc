@@ -70,7 +70,20 @@ fi
 
 echo ""
 
-# Step 6: Security Scan - Check for known vulnerabilities
+# Step 6: Coverage - Verify test coverage meets minimums (if configured)
+# Runs full test suite with coverage tool; enforces minimum thresholds
+# Customize: Update 'make coverage' in Makefile for your coverage tool
+if make -n coverage &>/dev/null; then
+  echo "→ Coverage check…"
+  make coverage || exit 1
+  echo ""
+else
+  echo "→ Coverage check… SKIPPED (no 'make coverage' target)"
+fi
+
+echo ""
+
+# Step 7: Security Scan - Check for known vulnerabilities
 # Runs tools like Brakeman (Rails), bundler-audit, npm audit, etc.
 # Customize: Update 'make secscan' in Makefile for your security tools
 echo "→ Security scan…"
