@@ -1,38 +1,79 @@
 ---
-description: Interactive Feature Development Loop (Design -> Plan -> Code -> Verify)
+description: Interactive Feature Development Loop — same phases as agentic loop but pauses for user input at each sprint
 ---
 
-1. Clarification Phase: Ask Questions
-   [Instruction] Review the user's request. If there are ambiguities, missing requirements, or insufficient context to draft a Spec, ask up to 10 clarifying questions. Do NOT proceed to the Design Phase until you have a clear understanding of the goal.
+# Interactive Feature Development Loop
 
-2. Design Phase: Create or Update Spec and ADR
-   [Instruction] Determine the next feature number (starting at 1). Create a new SPEC file at `docs/specs/[N].[feature_name]_spec.md`. If there are significant architecture changes, create an ADR at `docs/adrs/[N].[feature_name]_adr.md`.
+Same structure as the agentic loop, but pauses for user approval at each sprint boundary
+instead of looping autonomously. Use this when you want tighter control over implementation.
 
-3. Planning Phase: Create Implementation Plan
-   [Instruction] Create `docs/plans/[N].[feature_name]_plan.md` (ensure the number and feature name match the Spec/ADR) detailing the changes, files to touch, and verification steps.
+---
 
-4. STOP: Request User Approval
-   [Instruction] Present the implementation plan to the user and wait for explicit approval before writing code.
+## Phase 1: Design (same as agentic loop)
 
-5. Implementation Phase: Write Code and Unit Tests
-   [Model] Write the necessary code and corresponding unit tests. Ensure you follow the `Service::ClassName` pattern and use parameterized SQL.
+1. Clarification: Ask Questions
+   [Instruction] Review the user's request. Ask up to 10 clarifying questions.
 
-6. Code Style Check
+2. Brainstorm
+   [Instruction] You MUST invoke: `Skill: superpowers:brainstorming`
+
+3. Design: Create SPEC and ADR
+   [Instruction] Invoke: `Skill: superpowers:writing-plans`
+   Create SPEC at `docs/specs/[N].[feature_name]_spec.md`.
+   If architecture changes, create ADR at `docs/adrs/[N].[feature_name]_adr.md`.
+
+4. Sprint Contracts: Define Testable Criteria
+   [Instruction] Break the plan into sprints with testable contracts (see agentic loop for format).
+
+5. STOP: Request User Approval
+   [Instruction] Present SPEC, ADR, and sprint contracts. Wait for explicit approval before writing code.
+
+---
+
+## Phase 2: Implementation (per sprint, with user checkpoints)
+
+FOR each sprint:
+
+6. Implement sprint
+   [Instruction] Write code and tests for the current sprint contract criteria.
+
+7. Code style check
    bundle exec standardrb [files]
-   [Instruction] Run standardrb on the files you modified or created.
 
-7. Quick Verification
+8. Quick verification
    make quick-check
 
-8. Full Validation
+9. Full validation
    bash scripts/quality_gate.sh
 
-9. Browser Verification
-   [Instruction] Use the `browser_subagent` tool to verify the UI implementation. Navigate to the local server (usually http://localhost:3000) and perform the steps defined in the acceptance criteria. Capture specific behaviors.
+10. Browser verification (UI features only)
+    [Instruction] Use Playwright to verify UI criteria from the sprint contract.
 
-10. Security Review
-   make secscan
-   [Instruction] Manually review the implementation plan and changed files for any secrets or potential SQL injection risks that static analysis might have missed.
+11. Security check
+    make secscan
 
-11. Documentation Update
-   [Instruction] Update `RUNBOOK.md` if operational steps changed (use `docs/templates/RUNBOOK.md` for new runbooks). Update `README.md` if necessary.
+12. Evaluator review
+    [Instruction] Invoke the evaluator as a SEPARATE AGENT:
+    - `Skill: sprint-contract-evaluator` via Agent tool
+    - `pr-review-toolkit:code-reviewer` (parallel)
+    - `pr-review-toolkit:silent-failure-hunter` (parallel)
+
+13. STOP: Present sprint results to user
+    [Instruction] Show the evaluator's report. Wait for user approval before proceeding.
+    - If user approves: commit sprint, move to next
+    - If user requests changes: fix and re-evaluate (repeat from step 6)
+
+END sprint loop
+
+---
+
+## Phase 3: Completion
+
+14. Documentation update
+    [Instruction] Update `RUNBOOK.md` and `README.md` as needed.
+
+15. Structured handoff
+    [Instruction] Invoke: `Skill: handoff`
+
+16. Branch completion
+    [Instruction] Invoke: `Skill: superpowers:finishing-a-development-branch`

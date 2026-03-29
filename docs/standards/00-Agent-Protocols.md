@@ -37,46 +37,58 @@
    - Bullets, short sections, explicit checklists.
    - Offer 2 options + tradeoffs + recommendation when uncertain.
 
-## Autonomy Mode
+## Autonomy Mode (Agentic Loop)
 
-When I say **"Autonomy Mode: ON"** for a task:
+When I say **"Autonomy Mode: ON"** for a task, you enter the **agentic loop** — an autonomous development cycle where the generator iterates until a separate evaluator agent confirms the work is done.
 
-1) **Loop**
-   a) Produce a short **CHANGE PLAN** (files to touch + rationale).
-   b) Apply changes (code + tests + docs).
-   c) **Quick validation:** Run `make quick-check` (lint + tests for changed files only - fast).
-   d) If passing, run **full validation:** `bash scripts/quality_gate.sh` (includes system tests).
-   e) **Interactive Browser Verification:** For UI features, use the browser tool (or Playwright) to verify critical user flows:
-      - Start server if needed (`bin/dev`)
-      - Run interactive browser session to simulate user actions
-      - Capture screenshots for visual confirmation
-      - Verify actual behavior matches acceptance criteria
-   f) **Red-Team Review** (after tests pass, before declaring done):
-      - Role-play as each user type defined in the project: "What's the worst thing I can do with this feature?"
-      - Walk through each UI constraint: "Can I bypass this with DevTools or a direct HTTP call?"
-      - Walk through each invariant from the spec: "How could this invariant be violated in production?"
-      - Walk through each Assumption Audit row: "Did we actually guard against this being false?"
-      - If any gap is found: add model validation / service guard / test and repeat from step (b)
-   g) If any validation fails: analyze failures, propose fixes, and repeat from step (b).
-   h) Stop when all gates pass (specifically `scripts/quality_gate.sh`), browser tests confirm UX, Red-Team Review finds no gaps, and **Acceptance Criteria** in `PROJECT_BRIEF.md` are met.
+**Key principle:** The generator NEVER declares "done." The evaluator does.
 
-**Note:** Quality gate includes system tests by default. Skip with `SKIP_SYSTEM_TESTS=true` during iteration if needed, but always run full suite before declaring feature complete.
+See `agent/workflows/feature_loop_auto.md` for the complete workflow. Summary:
 
-2) **Rules**
-   - Do not expand scope beyond Acceptance Criteria.
+1) **Generator inner loop** (mechanical — fixes until green)
+   a) Implement against sprint contract criteria.
+   b) Run `make quick-check` (lint + changed tests).
+   c) Run `bash scripts/quality_gate.sh` (full suite).
+   d) Browser verification via Playwright (UI features only).
+   e) `make secscan` for security.
+   f) If any fail → fix and repeat from (a).
+
+2) **Evaluator outer loop** (judgment — separate agent)
+   a) Invoke `sprint-contract-evaluator` as a **separate Agent** (fresh context, no conversation history).
+   b) In parallel, invoke `pr-review-toolkit:code-reviewer` and `pr-review-toolkit:silent-failure-hunter`.
+   c) If evaluator verdict = PASS and no critical code review issues → commit sprint, move on.
+   d) If evaluator verdict = FAIL → read failure report, fix ONLY failed criteria, repeat from (1a).
+   e) **Iteration cap: 3 attempts per sprint.** After 3 FAILs, stop and escalate to the user.
+
+3) **Mandatory skill invocations** (the generator does NOT skip these)
+   - Before design: `superpowers:brainstorming`
+   - For planning: `superpowers:writing-plans`
+   - For implementation: `superpowers:executing-plans`
+   - For evaluation: `sprint-contract-evaluator` (via Agent — separate context)
+   - For code quality: `pr-review-toolkit:code-reviewer`, `pr-review-toolkit:silent-failure-hunter`
+   - For completion: `superpowers:finishing-a-development-branch`
+   - For handoff: `handoff`
+
+4) **Rules**
+   - Do not expand scope beyond sprint contract criteria.
+   - Do not self-evaluate — the evaluator does this.
+   - During the fix loop, ONLY fix criteria the evaluator flagged as FAIL.
    - Ask at most 10 blocking QUESTIONS if requirements are unclear.
    - Record decisions in a new ADR when adding deps/altering contracts.
    - Update RUNBOOKS for any service/infra change.
-   - Use `make quick-check` during iteration, `scripts/quality_gate.sh` for final validation.
 
-3) **Deliverables on success**
+5) **Escape valves**
+   - **Iteration cap:** 3 attempts per sprint contract, then escalate.
+   - **Scope lock:** Fix loop touches only failed criteria, nothing else.
+   - **Escalation:** Present sprint contract + last failure report + what was tried.
+
+6) **Deliverables on success**
    - Link to SPEC and ADR(s), provide PR diff summary.
-   - **Walkthrough:** Create a summary in `docs/walkthroughs/` (use `/docs/templates/WALKTHROUGH.md` if available).
-   - **Screenshots:** Move all screenshots/recordings to `docs/screenshots/` and update references in the walkthrough.
-   - Include test run summary (coverage if available).
-   - Security checklist reviewed, rollback notes, and follow-up tickets.
+   - Sprint contract results (pass/fail per criterion, iterations needed).
+   - Evaluator reports from final passing iteration.
+   - Security checklist reviewed, rollback notes.
 
-4) **Performance Tips**
+7) **Performance Tips**
    - For interactive development: Run `bundle exec guard` in background (auto-runs tests on file save)
    - For scripted validation: Use `make quick-check` → `scripts/quality_gate.sh` workflow
    - `make quick-check` is ~10x faster than full quality gate during iteration
@@ -93,23 +105,25 @@ When I say **"Autonomy Mode: ON"** for a task:
 > - `/docs/standards/60-Docs-&-Decision-Log.md`
 > - `/docs/standards/70-Prompting-&-Context.md`
 > - `/project/PROJECT_BRIEF.md`
+> - `/agent/workflows/feature_loop_auto.md`
 >
 > Respond in this sequence:
 > 1) **QUESTIONS** (max 5, only what blocks progress).
-> 2) **SPEC** (use `/docs/templates/SPEC.md`), citing handbook sections.
-> 3) **ADR** proposal (use `/docs/templates/ADR.md`).
-> 4) **STOP — AWAIT APPROVAL** before proceeding to implementation.
-> 5) **TASKS** with estimates and risks.
-> 6) **CHANGE PLAN** (files to add/edit).
-> 7) **CODE + TESTS**, ending with **RUN INSTRUCTIONS** and README/RUNBOOK updates.
-> 8) **SELF-REVIEW** (use `/docs/templates/SELF_REVIEW_CHECKLIST.md`) before declaring feature complete.
-> 9) **INTERACTIVE BROWSER VERIFICATION** (if UI) using browser tool *after* automated tests pass.
-> 10) **RED-TEAM REVIEW**: Role-play as each user type and attempt to break the feature; walk through every invariant and assumption audit row from the spec; confirm all UI-enforced constraints are also rejected server-side; document any gaps found and fixes applied.
-> 11) **WALKTHROUGH** in `docs/walkthroughs/` summarizing changes and verification.
-> 12) **CODE REVIEW** Ensure all code has been reviewed.
-> 13) **QUALITY GATE** Ensure `scripts/quality_gate.sh` passes.
+> 2) **BRAINSTORM** — invoke `superpowers:brainstorming` skill.
+> 3) **SPEC** (use `/docs/templates/SPEC.md`), citing handbook sections.
+> 4) **ADR** proposal (use `/docs/templates/ADR.md`).
+> 5) **SPRINT CONTRACTS** — testable pass/fail criteria per sprint in the implementation plan.
+> 6) **STOP — AWAIT APPROVAL** of SPEC, ADR, and sprint contracts.
 >
-> **Autonomy Mode: ON** when I say so. Iterate until `scripts/quality_gate.sh` passes and all Acceptance Criteria are met.
+> After **"Autonomy Mode: ON"**, enter the agentic loop:
+> 7) **IMPLEMENT** each sprint against its contract criteria.
+> 8) **QUALITY GATE** — `make quick-check` then `scripts/quality_gate.sh`.
+> 9) **EVALUATOR** — invoke `sprint-contract-evaluator` as a separate Agent (fresh context).
+> 10) **CODE REVIEW** — invoke `pr-review-toolkit:code-reviewer` + `silent-failure-hunter`.
+> 11) If evaluator PASS → commit sprint, next sprint. If FAIL → fix and repeat from 7.
+> 12) After all sprints pass → final evaluation, handoff, branch completion.
+>
+> **You never declare done. The evaluator does.**
 
 
 ## Autonomy Mode Trigger
