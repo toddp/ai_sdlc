@@ -1,0 +1,20 @@
+{
+  "name": "ai-sdlc",
+  "owner": {
+    "name": "Todd Pinkerton",
+    "email": "todd.pinkerton@gmail.com"
+  },
+  "plugins": [
+    {
+      "name": "ai-sdlc",
+      "source": "./",
+      "description": "Portable SDLC for Claude Code: approval-gated SPEC/ADR workflow, Autonomy Mode, engineering standards, and document templates.",
+      "version": "1.0.0",
+      "category": "workflow",
+      "author": {
+        "name": "Todd Pinkerton",
+        "email": "todd.pinkerton@gmail.com"
+      }
+    }
+  ]
+}

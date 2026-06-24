@@ -1,0 +1,23 @@
+{
+  "name": "ai-sdlc",
+  "description": "Portable SDLC for Claude Code: an approval-gated QUESTIONS->SPEC->ADR workflow, Autonomy Mode build-test loop, eight engineering-standards handbooks, and document templates (SPEC/ADR/plan).",
+  "version": "1.0.0",
+  "author": {
+    "name": "Todd Pinkerton",
+    "email": "todd.pinkerton@gmail.com"
+  },
+  "homepage": "https://github.com/toddp/ai_sdlc",
+  "repository": "https://github.com/toddp/ai_sdlc",
+  "license": "MIT",
+  "keywords": [
+    "sdlc",
+    "workflow",
+    "standards",
+    "spec",
+    "adr",
+    "autonomy",
+    "testing",
+    "security",
+    "rails"
+  ]
+}
